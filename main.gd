@@ -6,21 +6,28 @@ var raiz: No;
 var id: int = 6;
 
 ## Pra função draw
-var lines: Array = [];
+var lines: Array[Dictionary] = [];
 var posInicio: Vector2;
 var posFinal: Vector2;
 
 func _ready():
-	#criarNo();
-	#criarNo();
-	#criarNo();
 	pass;
+
+func _input(event):
+	if event is InputEventKey:
+		if event.key_label == KEY_ENTER:
+			print("Enter pressionado")
+			criarNo();
+			#queue_redraw();
 
 func _process(delta):
 	pass
 
 func criarNo():
 	var novoNo: No = instanciarNo();
+	
+	if !novoNo:
+		return;
 	
 	if !raiz:
 		print("Criando a raiz")
@@ -32,6 +39,8 @@ func criarNo():
 	else:
 		print("Raiz ja criada")
 		inserirNo(raiz, novoNo);
+	
+	
 	
 func inserirNo(raizAtual: No, novo: No):
 	
@@ -45,7 +54,7 @@ func inserirNo(raizAtual: No, novo: No):
 			raizAtual.right = novo
 			novo.set_new_position(raizAtual.right_pos.global_position);
 			#self.draw_line(raizAtual.global_position, novo.global_position, Color.RED, 1);
-			add_line(raizAtual.global_position, novo.global_position);
+			add_line(raizAtual, novo);
 			print("Adicionando a direita")
 		else:
 			inserirNo(raizAtual.right, novo);
@@ -54,7 +63,7 @@ func inserirNo(raizAtual: No, novo: No):
 			raizAtual.left = novo;
 			novo.set_new_position(raizAtual.left_pos.global_position);
 			#draw_line(raizAtual.global_position, novo.global_position, Color.RED, 1);
-			add_line(raizAtual.global_position, novo.global_position);
+			add_line(raizAtual, novo);
 			print("Adicionando a esquerda")
 		else:
 			inserirNo(raizAtual.left, novo);
@@ -62,18 +71,26 @@ func inserirNo(raizAtual: No, novo: No):
 func _on_button_pressed():
 	print("botão pressionado")
 	criarNo();
-	%inputText.clear();
+	
 
 func instanciarNo():
-	var numAtual: int = int(%inputText.text);
+	
+	var inputText: String = %inputText.text;
+	%inputText.clear();
+	
+	if inputText.is_empty() or !inputText.is_valid_int():
+		print_rich("[color=red]Caractere inválido")
+		return;
+	
+	var numAtual: int = int(inputText);
 	
 	#id += 1;
 	
 	print("instanciando um novo no para %d" % [numAtual])
 	
 	if !(numAtual is int):
-		print("Invalido");
-		return;
+		print_rich("[color=red]Invalido");
+		return null;
 	
 	var novoNo: No = NO.instantiate();
 	add_child(novoNo);
@@ -82,18 +99,14 @@ func instanciarNo():
 	return novoNo;
 
 func _draw():
-	print("quenga")
-	#draw_multiline(lines, Color.RED, 2)
 	
-	for line in lines:
-		print(line)
-		draw_line(line[0], line[1], Color.RED, 2);
+	for line: Dictionary in lines:
+		draw_line(line.pai.global_position, line.filho.global_position, Color.RED, 2);
 
-func add_line(inicio: Vector2, fim: Vector2):
-	#posInicio = inicio;
-	#posFinal = fim;
-	
-	lines.push_back([inicio, fim]);
+func add_line(pai: No, filho: No):
+	lines.push_back({
+		"pai": pai,
+		"filho": filho
+	});
 	print(lines)
 	queue_redraw();
-	
