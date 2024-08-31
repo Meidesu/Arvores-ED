@@ -2,25 +2,33 @@ extends Node2D
 
 class_name No
 
+@export var baseSeparation: int = 10;
+
 @onready var left_pos: Marker2D = $leftPos as Marker2D;
 @onready var right_pos: Marker2D = $rightPos as Marker2D;
 
 var num: int;
 var right: No;
 var left: No;
+var depth: int = 1;
 
-# Called when the node enters the scene tree for the first time.
 func _ready():
-	pass # Replace with function body.
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
 	pass
-
+	
 func set_num(value:int):
 	num = value;
 	%Label.text = str(value);
 
-func set_new_position(pos: Vector2):
+func set_new_position(pos: Vector2, _depth):
 	print("setando nova posição de alguem")
 	global_position = pos;
+	
+	depth = _depth;
+	left_pos.position.x += baseSeparation * -_depth;
+	right_pos.position.x += baseSeparation * _depth;
+
+func is_leaf(no: No):
+	return !no.left && !no.right; 
+
+func set_color(color: Color):
+	%bg.color = color;
