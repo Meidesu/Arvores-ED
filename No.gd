@@ -31,4 +31,5 @@ func is_leaf(no: No):
 	return !no.left && !no.right; 
 
 func set_color(color: Color):
-	%bg.color = color;
+	#await get_tree().create_timer(0.5).timeout;
+	await create_tween().tween_property(%bg, 'color', color, 0.5).finished;

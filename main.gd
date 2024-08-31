@@ -10,6 +10,10 @@ var lines: Array[Dictionary] = [];
 var posInicio: Vector2;
 var posFinal: Vector2;
 
+## Para animações
+var nodeFound: No;
+var currentNode: No;
+
 func _ready():
 	pass;
 
@@ -70,25 +74,19 @@ func inserirNo(raizAtual: No, novo: No, depth=1):
 
 func instanciarNo():
 	
-	var inputText: String = %inputText.text;
-	%inputText.clear();
-	
-	if inputText.is_empty() or !inputText.is_valid_int():
-		print_rich("[color=red]Caractere inválido")
-		return;
-	
-	var numAtual: int = int(inputText);
+	var numAtual = get_input_text(%inputText);
 	
 	#id += 1;
 	
 	print("instanciando um novo no para %d" % [numAtual])
 	
-	if !(numAtual is int):
+	if !(numAtual is int) or numAtual == null:
 		print_rich("[color=red]Invalido");
 		return null;
 	
 	var novoNo: No = NO.instantiate() as No;
 	novoNo.depth = 1
+	
 	add_child(novoNo);
 	novoNo.set_num(numAtual);
 	
@@ -106,6 +104,22 @@ func add_line(pai: No, filho: No):
 	});
 	queue_redraw();
 
+func find_node(_raiz: No, value: int):
+	
+	await _raiz.set_color(Color.BLUE)
+	
+	if _raiz.num == value:
+		await _raiz.set_color(Color.GREEN);
+		return _raiz;
+	
+	if _raiz.right != null and _raiz.num < value:
+		return await find_node(_raiz.right, value);
+	
+	if _raiz.left != null and _raiz.num > value:
+		return await find_node(_raiz.left, value);
+	
+	return null;
+	
 func remove_line(no: No):
 	lines = lines.filter(
 		func (line): 
@@ -115,31 +129,38 @@ func remove_line(no: No):
 
 func clear_tree(_raiz: No):
 	
-	_raiz.set_color(Color.BLUE)
-	await get_tree().create_timer(0.5).timeout;
+	await _raiz.set_color(Color.BLUE)
 	
 	if _raiz.is_leaf(_raiz):
 		
-		_raiz.set_color(Color.RED)
-		await get_tree().create_timer(0.5).timeout;
+		await _raiz.set_color(Color.RED)
 		
 		remove_line(_raiz);
 		_raiz.queue_free();
 		return;
 	
-	if _raiz.right:
+	if _raiz.right != null:
 		await clear_tree(_raiz.right);
 		
-	if _raiz.left:
+	if _raiz.left != null:
 		await clear_tree(_raiz.left)
 	
-	_raiz.set_color(Color.RED)
-	await get_tree().create_timer(0.5).timeout;
+	await _raiz.set_color(Color.RED)
 	
 	remove_line(_raiz);
 	_raiz.queue_free();
 	return;
 
+func get_input_text(textEdit: TextEdit):
+	var inputText: String = textEdit.text;
+	textEdit.clear();
+	
+	if inputText.is_empty() or !inputText.is_valid_int():
+		print_rich("[color=red]Caractere inválido")
+		return null;
+	
+	return int(inputText);
+	
 func _on_button_pressed():
 	print("Criando nó!")
 	criarNo();
@@ -147,3 +168,9 @@ func _on_button_pressed():
 func _on_clear_button_pressed():
 	if raiz != null:
 		await clear_tree(raiz);
+
+func _on_search_button_pressed():
+	if raiz != null:
+		nodeFound = await find_node(raiz, get_input_text(%searchText))
+		
+		await clear_tree(nodeFound);
